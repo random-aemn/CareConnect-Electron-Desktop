@@ -4,7 +4,7 @@ html, body, #root { margin:0; min-width:320px; min-height:100%; }
 body { min-height:100vh; overflow:hidden; }
 button, input, select, textarea { font:inherit; }
 button { color:inherit; }
-button:focus-visible, input:focus-visible, [tabindex="-1"]:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex="-1"]:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
 button:disabled { cursor:not-allowed; opacity:.65; }
 h1,h2,h3,p { margin-top:0; }
 h1,h2 { font-family:Georgia,"Times New Roman",serif; color:#0d2e42; }
@@ -159,6 +159,12 @@ td small { color:var(--muted); }
 .form-field textarea,.form-section textarea { min-height:78px; resize:vertical; }
 .field-error { color:#b42318; }
 .appointment-datetime { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+.reminder-field { border:0; padding:0; margin:0; }
+.reminder-field>legend { margin-bottom:.4rem; font-size:.68rem; font-weight:700; }
+.time-picker,.dose-actions { display:flex; align-items:center; gap:.35rem; }
+.time-picker select { min-width:8rem; }
+.dose-actions { align-items:stretch; flex-direction:column; }
+.dose-actions button { white-space:nowrap; }
 .field-hint { margin:-.45rem 0 0; color:var(--muted); font-size:.65rem; }
 .help-list { display:grid; gap:.7rem; }
 .help-list p { display:flex; align-items:center; gap:1rem; margin:0; }
