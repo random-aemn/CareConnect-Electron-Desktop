@@ -26,10 +26,22 @@ describe("CareConnect app", () => {
     expect(screen.queryByRole("heading", { name: "Dr. Marcus Webb" })).not.toBeInTheDocument();
   });
 
+  it("supports arrow-key navigation for appointment tabs", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Appointments" }));
+    const upcoming = screen.getByRole("tab", { name: /Upcoming/ });
+    upcoming.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("tab", { name: "Past" })).toHaveFocus();
+    expect(screen.getByRole("tab", { name: "Past" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tabpanel")).toHaveAttribute("aria-labelledby", "appointments-past-tab");
+  });
+
   it("navigates to a selected search result", async () => {
     const user = userEvent.setup();
     render(<App />);
-    const search = screen.getByRole("searchbox", { name: /Search CareConnect/ });
+    const search = screen.getByRole("combobox", { name: /Search CareConnect/ });
 
     await user.type(search, "Metformin");
     const results = screen.getByRole("listbox");
@@ -38,6 +50,20 @@ describe("CareConnect app", () => {
     expect(screen.getByRole("heading", { name: "Medications" })).toBeInTheDocument();
     expect(screen.getByRole("cell", { name: /Metformin/ })).toBeInTheDocument();
     expect(search).toHaveValue("");
+  });
+
+  it("navigates search results as an accessible combobox", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const search = screen.getByRole("combobox", { name: /Search CareConnect/ });
+    await user.type(search, "Metformin");
+    expect(search).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("listbox", { name: "Search results" })).toBeInTheDocument();
+    await user.keyboard("{ArrowDown}");
+    expect(search).toHaveAttribute("aria-activedescendant", "search-option-m2");
+    expect(screen.getByRole("option", { name: /Metformin/ })).toHaveAttribute("aria-selected", "true");
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("heading", { name: "Medications" })).toBeInTheDocument();
   });
 
   it("opens help and closes it with its action", async () => {
@@ -95,12 +121,37 @@ describe("CareConnect app", () => {
     expect(screen.getByText("Jordan: Thanks for the update.")).toBeInTheDocument();
   });
 
+  it("exposes selected and unread message states", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /^Messages/ }));
+    const selected = screen.getByRole("button", { name: /Dr. Sarah Chen.*Unread/ });
+    expect(selected).toHaveAttribute("aria-pressed", "true");
+    const next = screen.getByRole("button", { name: /Northside Medical Center.*Unread/ });
+    await user.click(next);
+    expect(next).toHaveAttribute("aria-pressed", "true");
+    expect(selected).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("exposes the current page for every sidebar destination", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const healthRecords = screen.getByRole("button", { name: "Health records" });
+    await user.click(healthRecords);
+    expect(healthRecords).toHaveAttribute("aria-current", "page");
+    const preferences = screen.getByRole("button", { name: "Preferences" });
+    await user.click(preferences);
+    expect(preferences).toHaveAttribute("aria-current", "page");
+  });
+
   it("requests an appointment and shows the new visit", async () => {
     const user = userEvent.setup();
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: "New appointment" }));
     const dialog = screen.getByRole("dialog", { name: "Request an appointment" });
+    expect(within(dialog).getByLabelText("Preferred date *")).toHaveAttribute("aria-describedby", "appointment-date-hint");
+    expect(within(dialog).getByLabelText("Preferred time *")).toHaveAttribute("aria-describedby", "appointment-date-hint");
     await user.selectOptions(within(dialog).getByLabelText("Provider *"), "Dr. Priya Nair");
     await user.type(within(dialog).getByLabelText("Preferred date *"), "2026-10-10");
     await user.selectOptions(within(dialog).getByLabelText("Preferred time *"), "09:00");
